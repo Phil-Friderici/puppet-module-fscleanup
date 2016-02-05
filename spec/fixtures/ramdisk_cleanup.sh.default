@@ -1,0 +1,127 @@
+#!/bin/bash
+# This file is being maintained by Puppet.
+# DO NOT EDIT
+
+# This script removes the contents of of $ramdisk_path/users/userid/directory/*
+# if all files within directory is older than $days.
+# 3 days before $days a mail will be sent out to $ramdisk_path/users/userid, warning about the cleanup.
+# Argument 1 = days
+# Argument 2 = If d, perform delete and mail.
+# Jonathan Bower, Johan Wennerberg
+# CONFIG
+days=21
+date=`date`
+host=`hostname`
+ramdisk_path="/ramdisk"
+message="On $date - $HOSTNAME\nContents of directory $i were last deleted according to WCDMA ramdisk stale data retention polilcy of $days days."
+# END CONFIG
+
+if [ ! -d "$ramdisk_path" ] ; then exit 1 ; fi
+if [ ! -d "$ramdisk_path/users" ] ; then exit 1 ; fi
+
+tempfile="`mktemp $ramdisk_path/tempfileXXXX`"
+whitelist_temp="`mktemp $ramdisk_path/whitelist_tempXXXX`"
+whitelist="`mktemp $ramdisk_path/whitelistXXXX`"
+blacklist="`mktemp $ramdisk_path/blacklistXXXX`"
+warnlist_temp="`mktemp $ramdisk_path/warnlist_tempXXXX`"
+warnlist_temp2="`mktemp $ramdisk_path/warnlist_temp2XXXX`"
+warnlist="`mktemp $ramdisk_path/warnlistXXXX`"
+skiplist="`mktemp $ramdisk_path/skiplistXXXX`"
+skiplist_temp="`mktemp $ramdisk_path/skiplist_tempXXXX`"
+skiplist_temp2="`mktemp $ramdisk_path/skiplist_temp2XXXX`"
+
+if [ $1 ] ; then days=$1 ; fi
+let "days_warn = $days - 3"
+let "days_warn_1 = $days_warn + 1"
+
+if [ "$days" -le "$days_warn" ] ; then exit 1 ; fi
+if [[ $days_warn =~ ^- ]] ; then exit 1 ; fi
+if [ "$days" -le "3" ] ; then unset message ; fi
+
+# This block will delete all directories older han $days
+if [ ! -z "$(ls -A $ramdisk_path/users/)" ] ; then
+
+  for i in $ramdisk_path/users/*/*/ ; do
+    find $i -mtime -$days_warn -print >> $whitelist_temp
+  done
+  awk 'BEGIN{FS=OFS="/"}{print $1,$2,$3,$4,$5 OFS}' $whitelist_temp  | uniq >> $whitelist
+
+  for i in $ramdisk_path/users/*/*/ ; do
+    if [ ! `grep $i $whitelist` ] ; then
+     if [ ! -z "$(ls -A $i)" ] ; then
+      echo $i >> $blacklist
+     fi
+    fi
+  done
+
+  for i in $ramdisk_path/users/*/*/ ; do
+    find $i -mtime -$days_warn_1 -print >> $warnlist_temp
+  done
+  awk 'BEGIN{FS=OFS="/"}{print $1,$2,$3,$4,$5 OFS}' $warnlist_temp  | uniq >> $warnlist_temp2
+
+  for i in `cat $warnlist_temp2` ; do
+    if [ ! `grep $i $whitelist` ] ; then
+     if [ ! -z "$(ls -A $i)" ] ; then
+      echo $i >> $warnlist
+      new_i=`echo $i | sed 's#/#\\\/#g'`
+      sed -i "/$new_i/d" $blacklist
+     fi
+    fi
+  done
+
+  for i in $ramdisk_path/users/*/*/ ; do
+    find $i -mtime -$days -print >> $skiplist_temp
+  done
+  awk 'BEGIN{FS=OFS="/"}{print $1,$2,$3,$4,$5 OFS}' $skiplist_temp  | uniq >> $skiplist_temp2
+
+  for i in `cat $skiplist_temp2` ; do
+    if [[ ! `grep $i $whitelist` && ! `grep $i $warnlist` ]] ; then
+      echo $i >> $skiplist
+      new_i=`echo $i | sed 's#/#\\\/#g'`
+      sed -i "/$new_i/d" $blacklist
+    fi
+  done
+
+  for i in `cat $blacklist` ; do
+    if [ -z "$(ls -A $i)" ] ; then
+      new_i=`echo $i | sed 's#/#\\\/#g'`
+      sed -i "/$new_i/d" $blacklist
+    fi
+  done
+
+  for i in `cat $blacklist` ; do
+    if [ "$2" == "d" ] ; then
+      rm -rf $i*
+      rm -rf $i.??*
+      logger "rm -rf $i*"
+    else
+      echo "PRETEND: rm -rf $i*"
+    fi
+  done
+
+  for i in `cat $warnlist` ; do
+   user=`echo $i | cut -d\/ -f4`
+   project_name=`echo $i | cut -d\/ -f5`
+   if [ "$2" == "d" ] ; then
+     if [ "$message" ] ; then
+       echo "Your project directory $i on $host, will be deleted in 3 days if you leave it untouched." | mail $user -s "Directory $i will be emptied in 3 days"
+     fi
+   else
+     if [ "$message" ] ; then
+       echo "PRETEND: mail $user with $i"
+     fi
+   fi
+  done
+
+fi
+
+rm $blacklist
+rm $whitelist_temp
+rm $whitelist
+rm $warnlist
+rm $warnlist_temp
+rm $warnlist_temp2
+rm $skiplist_temp2
+rm $skiplist_temp
+rm $skiplist
+rm $tempfile

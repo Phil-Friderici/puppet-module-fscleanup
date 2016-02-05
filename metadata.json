@@ -1,0 +1,14 @@
+{
+  "name":         "Phil-Friderici-fscleanup",
+  "version":      "0.0.1",
+  "author":       "Phil-Friderici",
+  "summary":      "cleanup functionality for directories of choice",
+  "license":      "Apache-2.0",
+  "source":       "git://github.com/Phil-Friderici/puppet-module-fscleanup.git",
+  "project_page": "https://github.com/Phil-Friderici/puppet-module-fscleanup",
+  "issues_url":   "https://github.com/Phil-Friderici/puppet-module-fscleanup/issues",
+  "description":  "cleanup functionality for directories of choice",
+  "dependencies": [
+    {"name":"puppetlabs/stdlib","version_requirement":">= 4.11.0 < 6.0.0"}
+  ]
+}
