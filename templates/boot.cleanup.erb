@@ -83,7 +83,7 @@ case "$1" in
                 rc_status -v -r
             fi
         fi
-        for CURDIR in <%= @tmp_dirs_array.join(" ") %> /tmp/.X11-unix /tmp/.ICE-unix \
+        for CURDIR in <%= @tmp_short_dirs_array.join(" ") %> /tmp/.X11-unix /tmp/.ICE-unix \
                       /var/tmp /var/tmp/vi.recover /var/run/uscreens ; do
             test -d $CURDIR || { \
                 mkdir $CURDIR && \

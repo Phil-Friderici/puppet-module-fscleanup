@@ -4,16 +4,16 @@
 
 class fscleanup (
   $clear_at_boot        = false,
-  $cleanup_dirs         = 'USE_DEFAULTS',
-  $tmp_dirs             = [ '/tmp' ],
-  $tmp_max_days         = 7,
+  $tmp_cleanup          = 'USE_DEFAULTS',
+  $tmp_long_dirs        = [ '/var/tmp' ], # need spec tests
+  $tmp_long_max_days    = 21,
+  $tmp_short_dirs       = [ '/tmp' ],
+  $tmp_short_max_days   = 7,
   $tmp_owners_to_keep   = [ 'root', 'nobody' ],
-  $long_tmp_dirs        = [ '/var/tmp' ],
-  $long_tmp_max_days    = 21,
   $ramdisk_cleanup      = false,
-  $ramdisk_cleanup_dir  = undef,
-  $ramdisk_cleanup_days = 21,
-  $ramdisk_cleanup_mail = true,
+  $ramdisk_dir          = undef,
+  $ramdisk_mail         = true,
+  $ramdisk_max_days     = 21,
 ) {
 
   # define OS related defaults
@@ -21,15 +21,15 @@ class fscleanup (
     'SLED', 'SLES': {
       case $::operatingsystemrelease {
         /11\.\d/: {
-          $cleanup_dirs_default = true
+          $tmp_cleanup_default = true
         }
         default: {
-          $cleanup_dirs_default = false
+          $tmp_cleanup_default = false
         }
       }
     }
     default: {
-      $cleanup_dirs_default = false
+      $tmp_cleanup_default = false
     }
   }
 
@@ -40,25 +40,25 @@ class fscleanup (
     $clear_at_boot_bool = str2bool($clear_at_boot)
   }
 
-  if is_bool($cleanup_dirs) == true {
-    $cleanup_dirs_bool = $cleanup_dirs
+  if is_bool($tmp_cleanup) == true {
+    $tmp_cleanup_bool = $tmp_cleanup
   } else {
-    $cleanup_dirs_bool = $cleanup_dirs ? {
-      'USE_DEFAULTS' => $cleanup_dirs_default,
-      default        => str2bool($cleanup_dirs)
+    $tmp_cleanup_bool = $tmp_cleanup ? {
+      'USE_DEFAULTS' => $tmp_cleanup_default,
+      default        => str2bool($tmp_cleanup)
     }
   }
 
-  if is_array($tmp_dirs) == true {
-    $tmp_dirs_array = $tmp_dirs
+  if is_array($tmp_short_dirs) == true {
+    $tmp_short_dirs_array = $tmp_short_dirs
   } else {
-    $tmp_dirs_array = any2array($tmp_dirs)
+    $tmp_short_dirs_array = any2array($tmp_short_dirs)
   }
 
-  if is_integer($tmp_max_days) == true {
-    $tmp_max_days_int = $tmp_max_days
+  if is_integer($tmp_short_max_days) == true {
+    $tmp_short_max_days_int = $tmp_short_max_days
   } else {
-    $tmp_max_days_int = floor($tmp_max_days)
+    $tmp_short_max_days_int = floor($tmp_short_max_days)
   }
 
   if is_array($tmp_owners_to_keep) == true {
@@ -69,16 +69,16 @@ class fscleanup (
     fail('fscleanup::tmp_owners_to_keep is not an array nor a string.')
   }
 
-  if is_array($long_tmp_dirs) == true {
-    $long_tmp_dirs_array = $long_tmp_dirs
+  if is_array($tmp_long_dirs) == true {
+    $tmp_long_dirs_array = $tmp_long_dirs
   } else {
-    $long_tmp_dirs_array = any2array($long_tmp_dirs)
+    $tmp_long_dirs_array = any2array($tmp_long_dirs)
   }
 
-  if is_integer($long_tmp_max_days) == true {
-    $long_tmp_max_days_int = $long_tmp_max_days
+  if is_integer($tmp_long_max_days) == true {
+    $tmp_long_max_days_int = $tmp_long_max_days
   } else {
-    $long_tmp_max_days_int = floor($long_tmp_max_days)
+    $tmp_long_max_days_int = floor($tmp_long_max_days)
   }
 
   if is_bool($ramdisk_cleanup) == true {
@@ -87,37 +87,37 @@ class fscleanup (
     $ramdisk_cleanup_bool = str2bool($ramdisk_cleanup)
   }
 
-  if is_integer($ramdisk_cleanup_days) == true {
-    $ramdisk_cleanup_days_int = $ramdisk_cleanup_days
+  if is_integer($ramdisk_max_days) == true {
+    $ramdisk_max_days_int = $ramdisk_max_days
   } else {
-    $ramdisk_cleanup_days_int = floor($ramdisk_cleanup_days)
+    $ramdisk_max_days_int = floor($ramdisk_max_days)
   }
 
-  if is_bool($ramdisk_cleanup_mail) == true {
-    $ramdisk_cleanup_mail_bool = $ramdisk_cleanup_mail
+  if is_bool($ramdisk_mail) == true {
+    $ramdisk_mail_bool = $ramdisk_mail
   } else {
-    $ramdisk_cleanup_mail_bool = str2bool($ramdisk_cleanup_mail)
+    $ramdisk_mail_bool = str2bool($ramdisk_mail)
   }
 
   # variable validations
   validate_bool($clear_at_boot_bool)
-  validate_bool($cleanup_dirs_bool)
-  validate_absolute_path($tmp_dirs_array)
-  validate_integer($tmp_max_days_int)
+  validate_bool($tmp_cleanup_bool)
+  validate_absolute_path($tmp_short_dirs_array)
+  validate_integer($tmp_short_max_days_int)
   validate_array($tmp_owners_to_keep_array)
-  validate_absolute_path($long_tmp_dirs_array)
-  validate_integer($long_tmp_max_days_int)
+  validate_absolute_path($tmp_long_dirs_array)
+  validate_integer($tmp_long_max_days_int)
   validate_bool($ramdisk_cleanup_bool)
   if $ramdisk_cleanup_bool == true {
-    validate_absolute_path($ramdisk_cleanup_dir)
+    validate_absolute_path($ramdisk_dir)
   }
-  validate_integer($ramdisk_cleanup_days_int)
-  validate_bool($ramdisk_cleanup_mail_bool)
+  validate_integer($ramdisk_max_days_int)
+  validate_bool($ramdisk_mail_bool)
 
   # functionality
-  if $cleanup_dirs_bool == true {
+  if $tmp_cleanup_bool == true {
     if "${::operatingsystem}" !~ /^(SLED|SLES)$/ or "${::operatingsystemrelease}" !~ /^11\./ { # lint:ignore:only_variable_string
-      fail('fscleanup::cleanup_dirs is only supported on SLED/SLES 11.')
+      fail('fscleanup::tmp_cleanup is only supported on SLED/SLES 11.')
     }
     else {
       if defined(File['/usr/local/etc']) == false {
@@ -182,7 +182,7 @@ class fscleanup (
 
     # If mail should be sent out, this can only run once a day!
     cron { 'ramdisk_cleanup.sh' :
-      command => "/usr/local/bin/ramdisk_cleanup.sh ${ramdisk_cleanup_days} d",
+      command => "/usr/local/bin/ramdisk_cleanup.sh ${ramdisk_max_days} d",
       hour    => '15',
       minute  => '30',
       require => File['/usr/local/bin/ramdisk_cleanup.sh'],

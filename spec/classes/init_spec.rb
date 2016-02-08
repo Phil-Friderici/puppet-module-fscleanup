@@ -78,19 +78,19 @@ describe 'fscleanup' do
     it { should contain_file('/usr/local/etc/fscleanup.conf').with_content(/^CLEAR_TMP_DIRS_AT_BOOTUP="yes"$/) }
   end
 
-  context 'with cleanup_dirs set to valid false' do
-    let (:params) { { :cleanup_dirs => false } }
+  context 'with tmp_cleanup set to valid false' do
+    let (:params) { { :tmp_cleanup => false } }
     it { should have_file_resource_count(0) }
     it { should have_cron_resource_count(0) }
   end
 
-  context 'with tmp_dirs set to valid array %w(/tmp /local/scratch)' do
-    let (:params) { { :tmp_dirs => %w(/tmp /local/scratch) } }
+  context 'with tmp_short_dirs set to valid array %w(/tmp /local/scratch)' do
+    let (:params) { { :tmp_short_dirs => %w(/tmp /local/scratch) } }
     it { should contain_file('/usr/local/etc/fscleanup.conf').with_content(%r{^TMP_DIRS_TO_CLEAR="/tmp /local/scratch"$}) }
   end
 
-  context 'with tmp_max_days set to valid 242' do
-    let (:params) { { :tmp_max_days => 242 } }
+  context 'with tmp_short_max_days set to valid 242' do
+    let (:params) { { :tmp_short_max_days => 242 } }
     it { should contain_file('/usr/local/etc/fscleanup.conf').with_content(%r{^MAX_DAYS_IN_TMP="242"$}) }
   end
 
@@ -99,24 +99,24 @@ describe 'fscleanup' do
     it { should contain_file('/usr/local/etc/fscleanup.conf').with_content(%r{^OWNER_TO_KEEP_IN_TMP="spec tests kicks"$}) }
   end
 
-  context 'with long_tmp_max_days set to valid 242' do
-    let (:params) { { :long_tmp_max_days => 242 } }
+  context 'with tmp_long_max_days set to valid 242' do
+    let (:params) { { :tmp_long_max_days => 242 } }
     it { should contain_file('/usr/local/etc/fscleanup.conf').with_content(%r{^MAX_DAYS_IN_LONG_TMP="242"$}) }
   end
 
   context 'with ramdisk_cleanup set to valid true' do
-    context 'and ramdisk_cleanup_dir left unset' do
+    context 'and ramdisk_dir left unset' do
       let (:params) { { :ramdisk_cleanup => true } }
       it 'should fail' do
         expect { should contain_class(subject) }.to raise_error(Puppet::Error, /is not an absolute path/)
       end
     end
 
-    context 'and ramdisk_cleanup_dir is set to valid /ramdisk' do
+    context 'and ramdisk_dir is set to valid /ramdisk' do
       let(:params) do
         {
-          :ramdisk_cleanup     => true,
-          :ramdisk_cleanup_dir => '/ramdisk',
+          :ramdisk_cleanup => true,
+          :ramdisk_dir     => '/ramdisk',
         }
       end
 
@@ -138,12 +138,12 @@ describe 'fscleanup' do
           'require' => 'File[/usr/local/bin/ramdisk_cleanup.sh]',
         })
       }
-      context 'and and ramdisk_cleanup_days is set to valid 242' do
+      context 'and and ramdisk_max_days is set to valid 242' do
         let(:params) do
           {
-            :ramdisk_cleanup      => true,
-            :ramdisk_cleanup_dir  => '/ramdisk',
-            :ramdisk_cleanup_days => 242,
+            :ramdisk_cleanup  => true,
+            :ramdisk_dir      => '/ramdisk',
+            :ramdisk_max_days => 242,
           }
         end
         it {
@@ -156,12 +156,12 @@ describe 'fscleanup' do
         }
 
       end
-      context 'and and ramdisk_cleanup_mail is set to valid false' do
+      context 'and and ramdisk_mail is set to valid false' do
         let(:params) do
           {
-            :ramdisk_cleanup      => true,
-            :ramdisk_cleanup_dir  => '/ramdisk',
-            :ramdisk_cleanup_mail => false,
+            :ramdisk_cleanup => true,
+            :ramdisk_dir     => '/ramdisk',
+            :ramdisk_mail    => false,
           }
         end
         it { should contain_file('/usr/local/bin/ramdisk_cleanup.sh').with_content(/^unset message$/) }
@@ -216,22 +216,18 @@ describe 'fscleanup' do
       context 'with ramdisk_cleanup functionality activated' do
         let(:params) do
           {
-            :ramdisk_cleanup     => true,
-            :ramdisk_cleanup_dir => '/ramdisk',
+            :ramdisk_cleanup => true,
+            :ramdisk_dir     => '/ramdisk',
           }
         end
         it { should contain_file('/usr/local/bin/ramdisk_cleanup.sh') }
         it { should contain_cron('ramdisk_cleanup.sh') }
       end
 
-      context 'with cleanup_dirs set to true' do
-        let(:params) do
-          {
-            :cleanup_dirs => true,
-          }
-        end
+      context 'with tmp_cleanup set to true' do
+        let (:params) { { :tmp_cleanup => true } }
         it 'should fail' do
-          expect { should contain_class(subject) }.to raise_error(Puppet::Error, %r(fscleanup::cleanup_dirs is only supported on SLED/SLES 11) )
+          expect { should contain_class(subject) }.to raise_error(Puppet::Error, %r(fscleanup::tmp_cleanup is only supported on SLED/SLES 11) )
         end
       end
     end
@@ -253,13 +249,13 @@ describe 'fscleanup' do
 
     validations = {
       'absolute_path' => {
-        :name    => %w(tmp_dirs long_tmp_dirs),
+        :name    => %w(tmp_short_dirs tmp_long_dirs),
         :valid   => ['/absolute/filepath','/absolute/directory/', %w(/array /with_paths)],
         :invalid => ['../invalid', 3, 2.42, %w(array), { 'ha' => 'sh' }, true, false, nil],
         :message => 'is not an absolute path',
       },
-      'absolute_path_ramdisk_cleanup_dir' => {
-        :name    => %w(ramdisk_cleanup_dir),
+      'absolute_path_ramdisk_dir' => {
+        :name    => %w(ramdisk_dir),
         :params  => { :ramdisk_cleanup => true },
         :valid   => ['/absolute/filepath','/absolute/directory/', %w(/array /with_paths)],
         :invalid => ['../invalid', 3, 2.42, %w(array), { 'ha' => 'sh' }, true, false, nil],
@@ -272,14 +268,14 @@ describe 'fscleanup' do
         :message => 'is not an array nor a string',
       },
       'bool_stringified' => {
-        :name    => %w(clear_at_boot cleanup_dirs ramdisk_cleanup ramdisk_cleanup_mail),
-        :params  => { :ramdisk_cleanup_dir => '/ramdisk' },
+        :name    => %w(clear_at_boot tmp_cleanup ramdisk_cleanup ramdisk_mail),
+        :params  => { :ramdisk_dir => '/ramdisk' },
         :valid   => [true, false, 'true', 'false'],
         :invalid => ['invalid', %w(array), { 'ha' => 'sh' }, 3, 2.42, nil],
         :message => '(Unknown type of boolean|str2bool\(\): Requires either string to work with)',
       },
       'integer/string' => {
-        :name    => %w(tmp_max_days long_tmp_max_days ramdisk_cleanup_days),
+        :name    => %w(tmp_short_max_days tmp_long_max_days ramdisk_max_days),
         :valid   => [242, '242',-242, '-242', 2.42],
         :invalid => ['invalid', %w(array),{ 'ha' => 'sh' }, true, false, nil],
         :message => 'floor\(\): Wrong argument type given',
