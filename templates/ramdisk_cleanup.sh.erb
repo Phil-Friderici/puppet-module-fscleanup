@@ -12,7 +12,7 @@
 days=21
 date=`date`
 host=`hostname`
-ramdisk_path="<%= @ramdisk_cleanup_dir %>"
+ramdisk_path="<%= @ramdisk_dir %>"
 message="On $date - $HOSTNAME\nContents of directory $i were last deleted according to WCDMA ramdisk stale data retention polilcy of $days days."
 # END CONFIG
 
@@ -37,7 +37,7 @@ let "days_warn_1 = $days_warn + 1"
 if [ "$days" -le "$days_warn" ] ; then exit 1 ; fi
 if [[ $days_warn =~ ^- ]] ; then exit 1 ; fi
 if [ "$days" -le "3" ] ; then unset message ; fi
-<% if @ramdisk_cleanup_mail_bool == false %>unset message<% end -%>
+<% if @ramdisk_mail_bool == false %>unset message<% end -%>
 
 # This block will delete all directories older han $days
 if [ ! -z "$(ls -A $ramdisk_path/users/)" ] ; then

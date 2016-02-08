@@ -10,7 +10,7 @@
 # not accessed for more than MAX_DAYS_IN_TMP. If MAX_DAYS_IN_TMP is not set
 # or set to 0, this feature will be disabled. 
 #
-MAX_DAYS_IN_TMP="<%= @tmp_max_days_int %>"
+MAX_DAYS_IN_TMP="<%= @tmp_short_max_days_int %>"
 
 ## Type:        integer
 ## Default:     0
@@ -18,7 +18,7 @@ MAX_DAYS_IN_TMP="<%= @tmp_max_days_int %>"
 # see MAX_DAYS_IN_TMP. This allows to specify another frequency for
 # a second set of directories.
 #
-MAX_DAYS_IN_LONG_TMP="<%= @long_tmp_max_days_int %>"
+MAX_DAYS_IN_LONG_TMP="<%= @tmp_long_max_days_int %>"
 
 ## Type:        string
 ## Default:     "/tmp"
@@ -26,7 +26,7 @@ MAX_DAYS_IN_LONG_TMP="<%= @long_tmp_max_days_int %>"
 # This variable contains a list of directories, in which old files are to
 # be searched and deleted. The frequency is determined by MAX_DAYS_IN_TMP
 #
-TMP_DIRS_TO_CLEAR="<%= @tmp_dirs_array.join(" ") %>"
+TMP_DIRS_TO_CLEAR="<%= @tmp_short_dirs_array.join(" ") %>"
 
 ## Type:        string
 ## Default:     ""
@@ -35,7 +35,7 @@ TMP_DIRS_TO_CLEAR="<%= @tmp_dirs_array.join(" ") %>"
 # be searched and deleted. The frequency is determined by MAX_DAYS_IN_LONG_TMP
 # If cleaning of /var/tmp is wanted add it here.
 #
-LONG_TMP_DIRS_TO_CLEAR="<%= @long_tmp_dirs_array.join(" ") %>"
+LONG_TMP_DIRS_TO_CLEAR="<%= @tmp_long_dirs_array.join(" ") %>"
 
 ## Type:        string
 ## Default:     root
