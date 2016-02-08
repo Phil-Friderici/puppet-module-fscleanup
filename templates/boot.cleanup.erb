@@ -1,0 +1,116 @@
+#! /bin/sh
+# This file is being maintained by Puppet.
+# DO NOT EDIT
+
+# Copyright (c) 2001-2005 SuSE Linux AG, Nuernberg, Germany.
+# All rights reserved.
+#
+# /etc/init.d/boot.cleanup
+#
+### BEGIN INIT INFO
+# Provides:          boot.cleanup
+# Required-Start:    boot.rootfsck
+# Should-Start:      $local_fs boot.quota
+# Required-Stop:     $null
+# Should-Stop:       $null
+# Default-Start:     B
+# Default-Stop:
+# Short-Description: do cleanup
+# Description: Cleanup left over tempfiles from 
+#       last run: screen sockets, temporary rpm-database files,
+#       ssh agent infos, various lockfiles, utmp and some more.
+### END INIT INFO
+
+. /etc/rc.status
+[ -f /usr/local/etc/fscleanup.conf ] && . /usr/local/etc/fscleanup.conf
+
+rc_reset
+
+case "$1" in
+  start)
+        #
+        # clean up
+        #
+        rm -f /var/lib/rpm/__db* 2>/dev/null
+        rm -rf /tmp/screens /tmp/uscreens /var/run/screens /var/run/uscreens 2>/dev/null
+        rm -f /tmp/.X*lock /var/spool/uucp/LCK* /var/log/sa/sadc.LOCK /fsck_corrected_errors 2>/dev/null
+        if test -x /usr/bin/find; then
+            find /tmp/ssh-* /tmp/gpg-* -type s -name "*agent*" -maxdepth 1 -exec rm -f {} + 2>/dev/null
+            find /var/run /var/lock -type f ! -wholename /var/run/utmp -exec rm -f {} + 2>/dev/null
+            if test -d /var/lib/ntp/var/run; then
+                find /var/lib/ntp/var/run -type f -exec rm -f {} + 2>/dev/null
+            fi
+        else
+            # fallback for find if we get /usr from nfs
+            rec_rem() {
+                for f in "$1"/*
+                do
+                test "$f" = /var/run/utmp && continue
+                test -L "$f" && continue
+                test -f "$f" && rm -f "$f"
+                test -d "$f" && rec_rem "$f"
+        done
+            }
+            #
+            test -d /var/run && rec_rem /var/run
+            test -d /var/lock && rec_rem /var/lock
+        fi
+        touch /var/run/utmp
+        chmod 664 /var/run/utmp
+        chown root:tty /var/run/utmp
+
+        # Re-read inittab for jobs and redo utmp records if required
+        test "$PREVLEVEL" = "S" && telinit q
+
+        # Restore a possibly dynamically modified /etc/resolv.conf
+        /sbin/netconfig update
+
+        # delete temp files
+        # If $CLEAR_TMP_DIRS_AT_BOOTUP = yes, delete files in
+        # $TMP_DIRS_TO_CLEAR, if $CLEAR_TMP_DIRS_AT_BOOTUP starts with a "/"
+        # delete files in those dirs instead.
+        CLEAR_DIRS="$TMP_DIRS_TO_CLEAR"
+        if [ "${CLEAR_TMP_DIRS_AT_BOOTUP:0:1}" = "/" ]; then
+          CLEAR_DIRS="$CLEAR_TMP_DIRS_AT_BOOTUP"
+          CLEAR_TMP_DIRS_AT_BOOTUP=yes
+        fi
+        if test -x /usr/bin/find; then
+            if test "$CLEAR_TMP_DIRS_AT_BOOTUP" = yes; then
+                echo -n "Cleaning temporary directories $CLEAR_DIRS"
+                for CURDIR in $CLEAR_DIRS ; do
+                    find $CURDIR -mindepth 1 -maxdepth 1 -exec rm -rf {} +
+                done
+                rc_status -v -r
+            fi
+        fi
+        for CURDIR in <%= @tmp_dirs_array.join(" ") %> /tmp/.X11-unix /tmp/.ICE-unix \
+                      /var/tmp /var/tmp/vi.recover /var/run/uscreens ; do
+            test -d $CURDIR || { \
+                mkdir $CURDIR && \
+                chown root:root $CURDIR && \
+                chmod 1777 $CURDIR ; \
+                }
+        done
+        for CURDIR in /var/run/screens ; do
+            test -d $CURDIR || { \
+                mkdir $CURDIR && \
+                chown root:root $CURDIR && \
+                chmod 755 $CURDIR ; \
+                }
+        done
+        ;;
+    stop|restart)
+        # skip / nothing to do
+        ;;
+    status)
+        # assume we have been run
+        rc_reset
+        rc_status -v
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|status|restart}"
+        exit 1
+        ;;
+esac
+
+rc_exit
