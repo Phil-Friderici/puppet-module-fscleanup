@@ -9,11 +9,11 @@ class fscleanup (
   $ramdisk_mail         = true,
   $ramdisk_max_days     = 21,
   $tmp_cleanup          = 'USE_DEFAULTS',
-  $tmp_long_dirs        = [ '/var/tmp' ], # need spec tests
+  $tmp_long_dirs        = [ '/var/tmp' ],
   $tmp_long_max_days    = 21,
   $tmp_owners_to_keep   = [ 'root', 'nobody' ],
   $tmp_short_dirs       = [ '/tmp' ],
-  $tmp_short_max_days   = 7, # need spec tests
+  $tmp_short_max_days   = 7,
 ) {
 
   # define OS related defaults

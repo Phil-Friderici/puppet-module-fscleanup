@@ -99,6 +99,11 @@ describe 'fscleanup' do
     it { should contain_file('/usr/local/etc/fscleanup.conf').with_content(%r{^OWNER_TO_KEEP_IN_TMP="spec tests kicks"$}) }
   end
 
+  context 'with tmp_long_dirs set to valid array %w(/tmp /var/tmp)' do
+    let (:params) { { :tmp_long_dirs => %w(/tmp /var/tmp) } }
+    it { should contain_file('/usr/local/etc/fscleanup.conf').with_content(%r{^LONG_TMP_DIRS_TO_CLEAR="/tmp /var/tmp"$}) }
+  end
+
   context 'with tmp_long_max_days set to valid 242' do
     let (:params) { { :tmp_long_max_days => 242 } }
     it { should contain_file('/usr/local/etc/fscleanup.conf').with_content(%r{^MAX_DAYS_IN_LONG_TMP="242"$}) }
