@@ -4,16 +4,16 @@
 
 class fscleanup (
   $clear_at_boot        = false,
-  $tmp_cleanup          = 'USE_DEFAULTS',
-  $tmp_long_dirs        = [ '/var/tmp' ], # need spec tests
-  $tmp_long_max_days    = 21,
-  $tmp_short_dirs       = [ '/tmp' ],
-  $tmp_short_max_days   = 7,
-  $tmp_owners_to_keep   = [ 'root', 'nobody' ],
   $ramdisk_cleanup      = false,
   $ramdisk_dir          = undef,
   $ramdisk_mail         = true,
   $ramdisk_max_days     = 21,
+  $tmp_cleanup          = 'USE_DEFAULTS',
+  $tmp_long_dirs        = [ '/var/tmp' ], # need spec tests
+  $tmp_long_max_days    = 21,
+  $tmp_owners_to_keep   = [ 'root', 'nobody' ],
+  $tmp_short_dirs       = [ '/tmp' ],
+  $tmp_short_max_days   = 7, # need spec tests
 ) {
 
   # define OS related defaults
@@ -182,7 +182,7 @@ class fscleanup (
 
     # If mail should be sent out, this can only run once a day!
     cron { 'ramdisk_cleanup.sh' :
-      command => "/usr/local/bin/ramdisk_cleanup.sh ${ramdisk_max_days} d",
+      command => "/usr/local/bin/ramdisk_cleanup.sh ${ramdisk_max_days_int} d",
       hour    => '15',
       minute  => '30',
       require => File['/usr/local/bin/ramdisk_cleanup.sh'],
