@@ -78,37 +78,6 @@ describe 'fscleanup' do
     it { should contain_file('/usr/local/etc/fscleanup.conf').with_content(/^CLEAR_TMP_DIRS_AT_BOOTUP="yes"$/) }
   end
 
-  context 'with tmp_cleanup set to valid false' do
-    let (:params) { { :tmp_cleanup => false } }
-    it { should have_file_resource_count(0) }
-    it { should have_cron_resource_count(0) }
-  end
-
-  context 'with tmp_short_dirs set to valid array %w(/tmp /local/scratch)' do
-    let (:params) { { :tmp_short_dirs => %w(/tmp /local/scratch) } }
-    it { should contain_file('/usr/local/etc/fscleanup.conf').with_content(%r{^TMP_DIRS_TO_CLEAR="/tmp /local/scratch"$}) }
-  end
-
-  context 'with tmp_short_max_days set to valid 242' do
-    let (:params) { { :tmp_short_max_days => 242 } }
-    it { should contain_file('/usr/local/etc/fscleanup.conf').with_content(%r{^MAX_DAYS_IN_TMP="242"$}) }
-  end
-
-  context 'with tmp_owners_to_keep set to valid array %w(spec tests kicks)' do
-    let (:params) { { :tmp_owners_to_keep => %w(spec tests kicks) } }
-    it { should contain_file('/usr/local/etc/fscleanup.conf').with_content(%r{^OWNER_TO_KEEP_IN_TMP="spec tests kicks"$}) }
-  end
-
-  context 'with tmp_long_dirs set to valid array %w(/tmp /var/tmp)' do
-    let (:params) { { :tmp_long_dirs => %w(/tmp /var/tmp) } }
-    it { should contain_file('/usr/local/etc/fscleanup.conf').with_content(%r{^LONG_TMP_DIRS_TO_CLEAR="/tmp /var/tmp"$}) }
-  end
-
-  context 'with tmp_long_max_days set to valid 242' do
-    let (:params) { { :tmp_long_max_days => 242 } }
-    it { should contain_file('/usr/local/etc/fscleanup.conf').with_content(%r{^MAX_DAYS_IN_LONG_TMP="242"$}) }
-  end
-
   context 'with ramdisk_cleanup set to valid true' do
     context 'and ramdisk_dir left unset' do
       let (:params) { { :ramdisk_cleanup => true } }
@@ -143,6 +112,18 @@ describe 'fscleanup' do
           'require' => 'File[/usr/local/bin/ramdisk_cleanup.sh]',
         })
       }
+
+      context 'and and ramdisk_mail is set to valid false' do
+        let(:params) do
+          {
+            :ramdisk_cleanup => true,
+            :ramdisk_dir     => '/ramdisk',
+            :ramdisk_mail    => false,
+          }
+        end
+        it { should contain_file('/usr/local/bin/ramdisk_cleanup.sh').with_content(/^unset message$/) }
+      end
+
       context 'and and ramdisk_max_days is set to valid 242' do
         let(:params) do
           {
@@ -161,17 +142,38 @@ describe 'fscleanup' do
         }
 
       end
-      context 'and and ramdisk_mail is set to valid false' do
-        let(:params) do
-          {
-            :ramdisk_cleanup => true,
-            :ramdisk_dir     => '/ramdisk',
-            :ramdisk_mail    => false,
-          }
-        end
-        it { should contain_file('/usr/local/bin/ramdisk_cleanup.sh').with_content(/^unset message$/) }
-      end
     end
+  end
+
+  context 'with tmp_cleanup set to valid false' do
+    let (:params) { { :tmp_cleanup => false } }
+    it { should have_file_resource_count(0) }
+    it { should have_cron_resource_count(0) }
+  end
+
+  context 'with tmp_long_dirs set to valid array %w(/tmp /var/tmp)' do
+    let (:params) { { :tmp_long_dirs => %w(/tmp /var/tmp) } }
+    it { should contain_file('/usr/local/etc/fscleanup.conf').with_content(%r{^LONG_TMP_DIRS_TO_CLEAR="/tmp /var/tmp"$}) }
+  end
+
+  context 'with tmp_long_max_days set to valid 242' do
+    let (:params) { { :tmp_long_max_days => 242 } }
+    it { should contain_file('/usr/local/etc/fscleanup.conf').with_content(%r{^MAX_DAYS_IN_LONG_TMP="242"$}) }
+  end
+
+  context 'with tmp_owners_to_keep set to valid array %w(spec tests kicks)' do
+    let (:params) { { :tmp_owners_to_keep => %w(spec tests kicks) } }
+    it { should contain_file('/usr/local/etc/fscleanup.conf').with_content(%r{^OWNER_TO_KEEP_IN_TMP="spec tests kicks"$}) }
+  end
+
+  context 'with tmp_short_dirs set to valid array %w(/tmp /local/scratch)' do
+    let (:params) { { :tmp_short_dirs => %w(/tmp /local/scratch) } }
+    it { should contain_file('/usr/local/etc/fscleanup.conf').with_content(%r{^TMP_DIRS_TO_CLEAR="/tmp /local/scratch"$}) }
+  end
+
+  context 'with tmp_short_max_days set to valid 242' do
+    let (:params) { { :tmp_short_max_days => 242 } }
+    it { should contain_file('/usr/local/etc/fscleanup.conf').with_content(%r{^MAX_DAYS_IN_TMP="242"$}) }
   end
 
   partially_supported_platforms = {
@@ -279,7 +281,7 @@ describe 'fscleanup' do
         :invalid => ['invalid', %w(array), { 'ha' => 'sh' }, 3, 2.42, nil],
         :message => '(Unknown type of boolean|str2bool\(\): Requires either string to work with)',
       },
-      'integer/string' => {
+      'integer_stringified' => {
         :name    => %w(tmp_short_max_days tmp_long_max_days ramdisk_max_days),
         :valid   => [242, '242',-242, '-242', 2.42],
         :invalid => ['invalid', %w(array),{ 'ha' => 'sh' }, true, false, nil],
