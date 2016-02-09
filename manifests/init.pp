@@ -146,7 +146,7 @@ class fscleanup (
         owner   => 'root',
         group   => 'root',
         mode    => '0755',
-        content => template('fscleanup/fscleanup.sh.erb'),
+        source  => 'file:///fscleanup/fscleanup.sh',
         require => File['/usr/local/etc/fscleanup.conf'],
       }
 
