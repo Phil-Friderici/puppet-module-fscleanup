@@ -19,7 +19,7 @@ This module provides OS default values for these OSfamilies:
  * SLES 11
 
 # Version history #
-0.0.1 2016-02-08 initial release
+0.1.0 2016-02-09 initial release
 
 
 # Parameters #
