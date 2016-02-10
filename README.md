@@ -19,6 +19,8 @@ This module provides OS default values for these OSfamilies:
  * SLES 11
 
 # Version history #
+0.1.2 2016-02-10 use Puppet Fileserver for compatibility reasons
+                 fix README.md
 0.1.1 2016-02-09 serve non-template as file
 0.1.0 2016-02-09 initial release
 
