@@ -146,7 +146,7 @@ class fscleanup (
         owner   => 'root',
         group   => 'root',
         mode    => '0755',
-        source  => 'file:///fscleanup/fscleanup.sh',
+        source  => 'puppet:///modules/fscleanup/fscleanup.sh',
         require => File['/usr/local/etc/fscleanup.conf'],
       }
 

@@ -39,7 +39,7 @@ describe 'fscleanup' do
         'group'   => 'root',
         'mode'    => '0755',
         'require' => 'File[/usr/local/etc/fscleanup.conf]',
-        'source'  => 'file:///fscleanup/fscleanup.sh',
+        'source'  => 'puppet:///modules/fscleanup/fscleanup.sh',
       })
     end
 
