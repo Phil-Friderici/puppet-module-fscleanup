@@ -80,7 +80,7 @@ This is LONG_TMP_DIRS_TO_CLEAR in fscleanup.conf.
 
 tmp_long_max_days
 -----------------
-Integer to define after how many days file will be deleted in $tmp_long_dirs. If set to 0, this feature will be disabled.
+Integer to define after how many days files will be deleted in $tmp_long_dirs. If set to 0, this feature will be disabled.
 This is MAX_DAYS_IN_LONG_TMP in fscleanup.conf.
 
 - *Default*: 21
@@ -104,7 +104,7 @@ This is TMP_DIRS_TO_CLEAR in fscleanup.conf.
 
 tmp_short_max_days
 ------------------
-Integer to define after how many days file will be deleted in $tmp_long_dirs. If set to 0, this feature will be disabled.
+Integer to define after how many days files will be deleted in $tmp_short_dirs. If set to 0, this feature will be disabled.
 This is MAX_DAYS_IN_TMP in fscleanup.conf.
 
 - *Default*: 7
