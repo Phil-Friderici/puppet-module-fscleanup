@@ -8,7 +8,7 @@ class fscleanup (
   $ramdisk_dir          = undef,
   $ramdisk_mail         = true,
   $ramdisk_max_days     = 21,
-  $tmp_cleanup          = 'USE_DEFAULTS',
+  $tmp_cleanup          = true,
   $tmp_long_dirs        = [ '/var/tmp' ],
   $tmp_long_max_days    = 21,
   $tmp_owners_to_keep   = [ 'root', 'nobody' ],
@@ -16,38 +16,15 @@ class fscleanup (
   $tmp_short_max_days   = 7,
 ) {
 
-  # define OS related defaults
-  case $::operatingsystem {
-    'SLED', 'SLES': {
-      case $::operatingsystemrelease {
-        /11\.\d/: {
-          $tmp_cleanup_default = true
-        }
-        default: {
-          $tmp_cleanup_default = false
-        }
-      }
-    }
-    default: {
-      $tmp_cleanup_default = false
-    }
-  }
-
-  # stringified value conversions (if needed)
+  # variable preparations
   if is_bool($clear_at_boot) == true {
     $clear_at_boot_bool = $clear_at_boot
   } else {
     $clear_at_boot_bool = str2bool($clear_at_boot)
   }
 
-  if is_bool($tmp_cleanup) == true {
-    $tmp_cleanup_bool = $tmp_cleanup
-  } else {
-    $tmp_cleanup_bool = $tmp_cleanup ? {
-      'USE_DEFAULTS' => $tmp_cleanup_default,
-      default        => str2bool($tmp_cleanup)
-    }
-  }
+  $tmp_cleanup_bool = str2bool($tmp_cleanup)
+  $systemd_bool = str2bool($::systemd)
 
   if is_array($tmp_short_dirs) == true {
     $tmp_short_dirs_array = $tmp_short_dirs
@@ -116,10 +93,10 @@ class fscleanup (
 
   # functionality
   if $tmp_cleanup_bool == true {
-    if "${::operatingsystem}" !~ /^(SLED|SLES)$/ or "${::operatingsystemrelease}" !~ /^11\./ { # lint:ignore:only_variable_string
-      fail('fscleanup::tmp_cleanup is only supported on SLED/SLES 11.')
+    if $systemd_bool == true {
+      # paste michaels code
     }
-    else {
+    elsif "${::operatingsystem}-${::operatingsystemrelease}" =~ /^(SLED|SLES)-11\.\d/ {
       if defined(File['/usr/local/etc']) == false {
         file { '/usr/local/etc' :
           ensure => 'directory',
@@ -168,8 +145,11 @@ class fscleanup (
         mode    => '0755',
         content => template('fscleanup/boot.cleanup.erb'),
       }
-    } # else
-  } # if $cleanip_dirs_bool
+    }
+    else {
+      fail('fscleanup::tmp_cleanup is only supported on SLED/SLES 11 and OSfamilies using systemd.')
+    }
+  }
 
   if $ramdisk_cleanup == true {
     file { '/usr/local/bin/ramdisk_cleanup.sh' :
