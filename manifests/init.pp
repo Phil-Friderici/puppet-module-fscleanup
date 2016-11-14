@@ -94,7 +94,13 @@ class fscleanup (
   # functionality
   if $tmp_cleanup_bool == true {
     if $systemd_bool == true {
-      # paste michaels code
+      file { '/etc/tmpfiles.d/tmp.conf' :
+        ensure  => 'file',
+        owner   => 'root',
+        group   => 'root',
+        mode    => '0644',
+        content => template('fscleanup/tmp.conf.erb'),
+      }
     }
     elsif "${::operatingsystem}-${::operatingsystemrelease}" =~ /^(SLED|SLES)-11\.\d/ {
       if defined(File['/usr/local/etc']) == false {

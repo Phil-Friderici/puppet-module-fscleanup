@@ -20,6 +20,47 @@ describe 'fscleanup' do
     it { should contain_class('fscleanup') }
 
     # systemd specific resources
+    content = <<-END.gsub(/^\s+\|/, '')
+      |# This file is being maintained by Puppet.
+      |# DO NOT EDIT
+      |
+      |#  This file is part of systemd.
+      |#
+      |#  systemd is free software; you can redistribute it and/or modify it
+      |#  under the terms of the GNU Lesser General Public License as published by
+      |#  the Free Software Foundation; either version 2.1 of the License, or
+      |#  (at your option) any later version.
+      |
+      |# See tmpfiles.d(5) for details
+      |
+      |# Puppet: use only the base types d,D,x,X,r,R
+      |
+      |# Clear tmp directories separately, to make them easier to override
+      |# Puppet: clean if mtime and ctime and atime exceed 7 or 21 days
+      |d /tmp 1777 root root 7d
+      |d /var/tmp 1777 root root 21d
+      |
+      |# Puppet: do not clean files from these owners
+      |x /tmp - - - - root,nobody
+      |x /var/tmp - - - - root,nobody
+      |
+      |
+      |# Exclude namespace mountpoints created with PrivateTmp=yes
+      |x /tmp/systemd-private-%b-*
+      |X /tmp/systemd-private-%b-*/tmp
+      |x /var/tmp/systemd-private-%b-*
+      |X /var/tmp/systemd-private-%b-*/tmp
+    END
+
+    it do
+      should contain_file('/etc/tmpfiles.d/tmp.conf').with({
+        'ensure'  => 'file',
+        'owner'   => 'root',
+        'group'   => 'root',
+        'mode'    => '0644',
+        'content' => content,
+      })
+    end
 
     # SLED/SLES 11 specific resources
     it { should_not contain_file('/usr/local/etc') }
@@ -32,6 +73,36 @@ describe 'fscleanup' do
     # ramdisk specifc resources
     it { should_not contain_file('/usr/local/bin/ramdisk_cleanup.sh') }
     it { should_not contain_cron('ramdisk_cleanup.sh') }
+
+    context 'when clear_at_boot set to valid true' do
+      let(:params) { { :clear_at_boot => true } }
+      it { should contain_file('/etc/tmpfiles.d/tmp.conf').with_content(%r{^R! /tmp/\*$}) }
+    end
+
+    context 'with tmp_long_dirs set to valid array %w(/tmp /var/tmp)' do
+      let(:params) { { :tmp_long_dirs => %w(/tmp /var/tmp) } }
+      it { should contain_file('/etc/tmpfiles.d/tmp.conf').with_content(%r{^d /tmp 1777 root root 21d\nd /var/tmp 1777 root root 21d$}) }
+    end
+
+    context 'with tmp_long_max_days set to valid 242' do
+      let(:params) { { :tmp_long_max_days => 242 } }
+      it { should contain_file('/etc/tmpfiles.d/tmp.conf').with_content(%r{^d /var/tmp 1777 root root 242d$}) }
+    end
+
+    context 'with tmp_owners_to_keep set to valid array %w(spec tests kicks)' do
+      let(:params) { { :tmp_owners_to_keep => %w(spec tests kicks) } }
+      it { should contain_file('/etc/tmpfiles.d/tmp.conf').with_content(%r{^x /tmp - - - - spec,tests,kicks\nx /var/tmp - - - - spec,tests,kicks$}) }
+    end
+
+    context 'with tmp_short_dirs set to valid array %w(/tmp /local/scratch)' do
+      let(:params) { { :tmp_short_dirs => %w(/tmp /local/scratch) } }
+      it { should contain_file('/etc/tmpfiles.d/tmp.conf').with_content(%r{^d /tmp 1777 root root 7d\nd /local/scratch 1777 root root 7d$}) }
+    end
+
+    context 'with tmp_short_max_days set to valid 242' do
+      let(:params) { { :tmp_short_max_days => 242 } }
+      it { should contain_file('/etc/tmpfiles.d/tmp.conf').with_content(%r{^d /tmp 1777 root root 242d$}) }
+    end
   end
 
   context 'with default params on operatingsystem SLES 11.4 running init' do
@@ -39,6 +110,7 @@ describe 'fscleanup' do
     it { should contain_class('fscleanup') }
 
     # systemd specific resources
+    it { should_not contain_cron('/etc/tmpfiles.d/tmp.conf') }
 
     # SLED/SLES 11 specific resources
     it do
