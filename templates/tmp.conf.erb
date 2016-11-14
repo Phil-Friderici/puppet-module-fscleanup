@@ -15,34 +15,34 @@
 # Clear tmp directories separately, to make them easier to override
 # Puppet: clean if mtime and ctime and atime exceed <%= @tmp_short_max_days_int %> or <%= @tmp_long_max_days_int %> days
 <%- @tmp_short_dirs_array.each do |dir| -%>
-<%- if @tmp_short_max_days_int != 0 -%>
+<%-   if @tmp_short_max_days_int != 0 -%>
 d <%= dir %> 1777 root root <%= @tmp_short_max_days_int %>d
-<%- else -%>
+<%-   else -%>
 d <%= dir %> 1777 root root -
-<% end -%>
-<% end -%>
+<%-   end -%>
+<%- end -%>
 <%- @tmp_long_dirs_array.each do |dir| -%>
-<%- if @tmp_long_max_days_int != 0 -%>
+<%-   if @tmp_long_max_days_int != 0 -%>
 d <%= dir %> 1777 root root <%= @tmp_long_max_days_int %>d
-<%- else -%>
+<%-   else -%>
 d <%= dir %> 1777 root root -
-<% end -%>
-<% end -%>
+<%-   end -%>
+<%- end -%>
 
 <%- if @tmp_owners_to_keep_array.any? -%>
 # Puppet: do not clean files from these owners
-<%- @tmp_short_dirs_array.each do |dir| -%>
+<%-   @tmp_short_dirs_array.each do |dir| -%>
 x <%= dir %> - - - - <%= @tmp_owners_to_keep_array.join(",") %>
-<% end -%>
-<%- @tmp_long_dirs_array.each do |dir| -%>
+<%-   end -%>
+<%-   @tmp_long_dirs_array.each do |dir| -%>
 x <%= dir %> - - - - <%= @tmp_owners_to_keep_array.join(",") %>
-<% end -%>
-<% end -%>
+<%-   end -%>
+<%- end -%>
 
 <%- if @clear_at_boot_bool -%>
 # Puppet: at boot delete everything in /tmp
 R! /tmp/*
-<% end -%>
+<%- end -%>
 
 # Exclude namespace mountpoints created with PrivateTmp=yes
 x /tmp/systemd-private-%b-*
