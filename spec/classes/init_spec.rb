@@ -285,15 +285,15 @@ describe 'fscleanup' do
     let(:mandatory_params) { {} }
 
     validations = {
-      'absolute_path' => {
+      'absolute_path array/string' => {
         :name    => %w(tmp_short_dirs tmp_long_dirs),
         :valid   => ['/absolute/filepath', '/absolute/directory/', %w(/array /with_paths)],
         :invalid => ['../invalid', 3, 2.42, %w(array), { 'ha' => 'sh' }, true, false, nil],
         :message => 'is not an absolute path',
       },
-      'absolute_path_ramdisk_dir' => {
+      'absolute_path array/string' => {
         :name    => %w(ramdisk_dir),
-        :params  => { :ramdisk_cleanup => true },
+        :params  => { :ramdisk_cleanup => true }, # activate ramdisk functionality
         :valid   => ['/absolute/filepath', '/absolute/directory/', %w(/array /with_paths)],
         :invalid => ['../invalid', 3, 2.42, %w(array), { 'ha' => 'sh' }, true, false, nil],
         :message => 'is not an absolute path',
@@ -306,7 +306,7 @@ describe 'fscleanup' do
       },
       'bool_stringified' => {
         :name    => %w(clear_at_boot tmp_cleanup ramdisk_cleanup ramdisk_mail),
-        :params  => { :ramdisk_dir => '/ramdisk' },
+        :params  => { :ramdisk_dir => '/ramdisk' }, # mandatory for ramdisk functionality
         :valid   => [true, false, 'true', 'false'],
         :invalid => ['invalid', %w(array), { 'ha' => 'sh' }, 3, 2.42, nil],
         :message => '(Unknown type of boolean|str2bool\(\): Requires either string to work with)',
@@ -317,7 +317,6 @@ describe 'fscleanup' do
         :invalid => ['invalid', %w(array), { 'ha' => 'sh' }, true, false, nil],
         :message => 'floor\(\): Wrong argument type given',
       },
-
     }
 
     validations.sort.each do |type, var|

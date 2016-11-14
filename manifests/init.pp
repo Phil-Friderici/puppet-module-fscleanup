@@ -17,79 +17,44 @@ class fscleanup (
 ) {
 
   # variable preparations
-  if is_bool($clear_at_boot) == true {
-    $clear_at_boot_bool = $clear_at_boot
-  } else {
-    $clear_at_boot_bool = str2bool($clear_at_boot)
-  }
+  $tmp_short_dirs_array = any2array($tmp_short_dirs)
+  $tmp_long_dirs_array  = any2array($tmp_long_dirs)
+  $clear_at_boot_bool   = str2bool($clear_at_boot)
+  $ramdisk_cleanup_bool = str2bool($ramdisk_cleanup)
+  $ramdisk_mail_bool    = str2bool($ramdisk_mail)
+  $tmp_cleanup_bool     = str2bool($tmp_cleanup)
+  $systemd_bool         = str2bool($::systemd)
+  $tmp_short_max_days_int = floor($tmp_short_max_days)
+  $tmp_long_max_days_int  = floor($tmp_long_max_days)
+  $ramdisk_max_days_int   = floor($ramdisk_max_days)
 
-  $tmp_cleanup_bool = str2bool($tmp_cleanup)
-  $systemd_bool = str2bool($::systemd)
-
-  if is_array($tmp_short_dirs) == true {
-    $tmp_short_dirs_array = $tmp_short_dirs
-  } else {
-    $tmp_short_dirs_array = any2array($tmp_short_dirs)
-  }
-
-  if is_integer($tmp_short_max_days) == true {
-    $tmp_short_max_days_int = $tmp_short_max_days
-  } else {
-    $tmp_short_max_days_int = floor($tmp_short_max_days)
-  }
-
-  if is_array($tmp_owners_to_keep) == true {
-    $tmp_owners_to_keep_array = $tmp_owners_to_keep
-  } elsif is_string($tmp_owners_to_keep) == true {
+  if is_array($tmp_owners_to_keep) or is_string($tmp_owners_to_keep) {
     $tmp_owners_to_keep_array = any2array($tmp_owners_to_keep)
-  } else {
+  }
+  else {
     fail('fscleanup::tmp_owners_to_keep is not an array nor a string.')
   }
 
-  if is_array($tmp_long_dirs) == true {
-    $tmp_long_dirs_array = $tmp_long_dirs
-  } else {
-    $tmp_long_dirs_array = any2array($tmp_long_dirs)
-  }
-
-  if is_integer($tmp_long_max_days) == true {
-    $tmp_long_max_days_int = $tmp_long_max_days
-  } else {
-    $tmp_long_max_days_int = floor($tmp_long_max_days)
-  }
-
-  if is_bool($ramdisk_cleanup) == true {
-    $ramdisk_cleanup_bool = $ramdisk_cleanup
-  } else {
-    $ramdisk_cleanup_bool = str2bool($ramdisk_cleanup)
-  }
-
-  if is_integer($ramdisk_max_days) == true {
-    $ramdisk_max_days_int = $ramdisk_max_days
-  } else {
-    $ramdisk_max_days_int = floor($ramdisk_max_days)
-  }
-
-  if is_bool($ramdisk_mail) == true {
-    $ramdisk_mail_bool = $ramdisk_mail
-  } else {
-    $ramdisk_mail_bool = str2bool($ramdisk_mail)
-  }
-
   # variable validations
-  validate_bool($clear_at_boot_bool)
-  validate_bool($tmp_cleanup_bool)
-  validate_absolute_path($tmp_short_dirs_array)
-  validate_integer($tmp_short_max_days_int)
+  validate_bool(
+    $clear_at_boot_bool,
+    $tmp_cleanup_bool,
+    $ramdisk_cleanup_bool,
+    $ramdisk_mail_bool,
+  )
+  validate_absolute_path(
+    $tmp_short_dirs_array,
+    $tmp_long_dirs_array,
+  )
+  validate_integer([
+    $tmp_short_max_days_int,
+    $tmp_long_max_days_int,
+    $ramdisk_max_days_int,
+  ])
   validate_array($tmp_owners_to_keep_array)
-  validate_absolute_path($tmp_long_dirs_array)
-  validate_integer($tmp_long_max_days_int)
-  validate_bool($ramdisk_cleanup_bool)
   if $ramdisk_cleanup_bool == true {
     validate_absolute_path($ramdisk_dir)
   }
-  validate_integer($ramdisk_max_days_int)
-  validate_bool($ramdisk_mail_bool)
 
   # functionality
   if $tmp_cleanup_bool == true {
