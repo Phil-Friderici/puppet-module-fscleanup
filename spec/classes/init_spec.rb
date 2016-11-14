@@ -1,21 +1,6 @@
 require 'spec_helper'
 describe 'fscleanup' do
-  let(:facts) do
-    {
-      :operatingsystem        => 'SLES',
-      :operatingsystemrelease => '11.4',
-      :systemd                => nil,
-    }
-  end
-
   context 'with default params on operatingsystem running systemd' do
-    let(:facts) do
-      {
-        :operatingsystem        => 'RedHat',
-        :operatingsystemrelease => '7.3',
-        :systemd                => true,
-      }
-    end
     it { should compile.with_all_deps }
     it { should contain_class('fscleanup') }
 
@@ -106,6 +91,13 @@ describe 'fscleanup' do
   end
 
   context 'with default params on operatingsystem SLES 11.4 running init' do
+    let(:facts) do
+      {
+        :operatingsystem        => 'SLES',
+        :operatingsystemrelease => '11.4',
+        :systemd                => nil,
+      }
+    end
     it { should compile.with_all_deps }
     it { should contain_class('fscleanup') }
 
