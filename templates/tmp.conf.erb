@@ -1,0 +1,51 @@
+# This file is being maintained by Puppet.
+# DO NOT EDIT
+
+#  This file is part of systemd.
+#
+#  systemd is free software; you can redistribute it and/or modify it
+#  under the terms of the GNU Lesser General Public License as published by
+#  the Free Software Foundation; either version 2.1 of the License, or
+#  (at your option) any later version.
+
+# See tmpfiles.d(5) for details
+
+# Puppet: use only the base types d,D,x,X,r,R
+
+# Clear tmp directories separately, to make them easier to override
+# Puppet: clean if mtime and ctime and atime exceed <%= @tmp_short_max_days_int %> or <%= @tmp_long_max_days_int %> days
+<%- @tmp_short_dirs_array.each do |dir| -%>
+<%-   if @tmp_short_max_days_int != 0 -%>
+d <%= dir %> 1777 root root <%= @tmp_short_max_days_int %>d
+<%-   else -%>
+d <%= dir %> 1777 root root -
+<%-   end -%>
+<%- end -%>
+<%- @tmp_long_dirs_array.each do |dir| -%>
+<%-   if @tmp_long_max_days_int != 0 -%>
+d <%= dir %> 1777 root root <%= @tmp_long_max_days_int %>d
+<%-   else -%>
+d <%= dir %> 1777 root root -
+<%-   end -%>
+<%- end -%>
+
+<%- if @tmp_owners_to_keep_array.any? -%>
+# Puppet: do not clean files from these owners
+<%-   @tmp_short_dirs_array.each do |dir| -%>
+x <%= dir %> - - - - <%= @tmp_owners_to_keep_array.join(",") %>
+<%-   end -%>
+<%-   @tmp_long_dirs_array.each do |dir| -%>
+x <%= dir %> - - - - <%= @tmp_owners_to_keep_array.join(",") %>
+<%-   end -%>
+<%- end -%>
+
+<%- if @clear_at_boot_bool -%>
+# Puppet: at boot delete everything in /tmp
+R! /tmp/*
+<%- end -%>
+
+# Exclude namespace mountpoints created with PrivateTmp=yes
+x /tmp/systemd-private-%b-*
+X /tmp/systemd-private-%b-*/tmp
+x /var/tmp/systemd-private-%b-*
+X /var/tmp/systemd-private-%b-*/tmp
