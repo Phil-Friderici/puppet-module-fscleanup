@@ -1,6 +1,6 @@
 {
   "name":         "Phil-Friderici-fscleanup",
-  "version":      "0.1.2",
+  "version":      "0.2.0",
   "author":       "Phil-Friderici",
   "summary":      "cleanup functionality for directories of choice",
   "license":      "Apache-2.0",

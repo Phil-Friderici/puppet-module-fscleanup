@@ -113,8 +113,9 @@ Integer to define after how many days files will be deleted in $tmp_short_dirs. 
 
 
 # Version history #
-0.2.0 2016-11-14
+0.2.0 2016-11-17
   * add support for systemd
+  * fix & refactor of ramdisk functionality
   * refactor of variable validations
 
 0.1.2 2016-02-10
