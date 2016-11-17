@@ -259,7 +259,7 @@ describe 'fscleanup' do
           :ramdisk_mail    => false,
         }
       end
-      it { should contain_file('/usr/local/bin/ramdisk_cleanup.sh').with_content(/^unset message$/) }
+      it { should_not contain_file('/usr/local/bin/ramdisk_cleanup.sh').with_content(/^message=1$/) }
     end
 
     context 'when and ramdisk_max_days is set to valid 242' do
